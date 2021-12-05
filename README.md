@@ -38,19 +38,19 @@ You can use our pipline from **here** transform annotated images from existing o
 
 **Images for LOD**
 
-\1. RGB-normal(long-exposure normal-light images in sRGB format) images: 
+1. RGB-normal(long-exposure normal-light images in sRGB format) images: 
 
 **[BaiduYun_RGB-normal]**
 
-\2. RGB-dark(short-exposure low-light images in sRGB format) images: 
+2. RGB-dark(short-exposure low-light images in sRGB format) images: 
 
 **[BaiduYun_RGB-dark]**
 
-\3. RAW-normal(long-exposure normal-light images in RAW format) images:
+3. RAW-normal(long-exposure normal-light images in RAW format) images:
 
 **[BaiduYun_RAW-normal]**
 
-\4. RAW-dark(short-exposure low-light images in RAW format) images:
+4. RAW-dark(short-exposure low-light images in RAW format) images:
 
 **[BaiduYun_RAW-dark]**
 
