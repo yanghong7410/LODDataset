@@ -102,7 +102,7 @@ Yang Hong, Kaixuan Wei, Linwei Chen, and Ying Fu, "Crafting Object Detection in 
 >
 >  booktitle={BMVC},
 >
->  year={2021},
+>  year={2021}.
 
 ​          
 
