@@ -99,8 +99,8 @@ Yang Hong, Kaixuan Wei, Linwei Chen, and Ying Fu, "Crafting Object Detection in 
 ```
 @inproceedings{Hong2021Crafting,
          title={Crafting Object Detection in Very Low Light},
-         author={Yang Hong, Kaixuan Wei, Linwei Chen, Ying Fu},
-         booktitle={BMVC},
+         author={Hong, Yang and Wei, Kaixuan and Chen, Linwei and Fu, Ying},
+         booktitle={Proceedings of the British Machine Vision Virtual Conference},
          year={2021}
 }
 ```
