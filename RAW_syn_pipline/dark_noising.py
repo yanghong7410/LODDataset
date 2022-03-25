@@ -21,30 +21,29 @@ class NoiseModel:
         print('[i] using noise model {}'.format(model))
         
         self.camera_params = {}
-        self.camera_params[camera] = np.load(join(self.param_dir, camera+'_params.npy'), allow_pickle=True).item() # 加载指定相机标定参数
+        self.camera_params[camera] = np.load(join(self.param_dir, camera+'_params.npy'), allow_pickle=True).item() 
 
         self.model = model
         
     def _sample_params(self):
         camera = self.camera
-        Q_step = 1 # 量化层级
+        Q_step = 1 
 
         profiles = ['Profile-1']
-        saturation_level = 16383 - 512 # 相机标定值，白点减去黑电平值
+        saturation_level = 16383 - 512 
 
-        # 调取相机标定参数
+        
         camera_params = self.camera_params[camera]
         Kmin = camera_params['Kmin']
         Kmax = camera_params['Kmax']
         
-        # 抽取标定参数中的随机数
-        G_shape = np.random.choice(camera_params['G_shape'])
+        (camera_params['G_shape'])
         ind = np.random.randint(0, camera_params['color_bias'].shape[0])
         color_bias = camera_params['color_bias'][ind, :]
         profile = np.random.choice(profiles)
         camera_params = camera_params[profile]
 
-        # 初始化noisemodel模型中的随机数
+        
         log_K = np.random.uniform(low=np.log(Kmin), high=np.log(Kmax))
         log_g_scale = np.random.standard_normal() * camera_params['g_scale']['sigma'] * 1 +\
              camera_params['g_scale']['slope'] * log_K + camera_params['g_scale']['bias']
@@ -53,13 +52,13 @@ class NoiseModel:
         log_R_scale = np.random.standard_normal() * camera_params['R_scale']['sigma'] * 1 +\
              camera_params['R_scale']['slope'] * log_K + camera_params['R_scale']['bias']
 
-        # 计算noisemodel中的参数
+        
         K = np.exp(log_K)
         g_scale = np.exp(log_g_scale)
         G_scale = np.exp(log_G_scale)
         R_scale = np.exp(log_R_scale)
 
-        # radio控制噪声的大小，ratio取值越大噪声越明显
+        
         #ratio = np.random.uniform(low=100, high=300)
         ratio = np.random.uniform(low=100, high=200)
         # ratio = np.random.uniform(low=20, high=100)
@@ -77,7 +76,7 @@ class NoiseModel:
         y = y * saturation_level
         y = y / ratio
         
-        # noisemodel中的photon shot noise
+        
         if 'P' in self.model:
             z = np.random.poisson(y / K).astype(np.float32) * K
         elif 'p' in self.model:
@@ -85,21 +84,21 @@ class NoiseModel:
         else:
             z = y
 
-        # noisemodel中的read noise
+        
         if 'g' in self.model:
             z = z + np.random.randn(*y.shape).astype(np.float32) * np.maximum(g_scale, 1e-10) # Gaussian noise            
         elif 'G' in self.model:
             z = z + stats.tukeylambda.rvs(G_shape, loc=0, scale=G_scale, size=y.shape).astype(np.float32) # Tukey Lambda 
 
-        # noisemodel会议版本未提及此噪声, 根据代码是根据相机标定参数中的随机数随机添加色偏
+        
         if 'B' in self.model:
             z = self.add_color_bias(z, color_bias=color_bias)
 
-        # noisemodel中的row noise
+        
         if 'R' in self.model:
             z = self.add_banding_noise(z, scale=R_scale)
 
-        # noisemodel中的quantization noise
+        
         if 'U' in self.model:
             z = z + np.random.uniform(low=-0.5*Q_step, high=0.5*Q_step)     
 
@@ -108,17 +107,17 @@ class NoiseModel:
 
         return z
 
-    def add_color_bias(self, img, color_bias): # 添加随机色偏
+    def add_color_bias(self, img, color_bias): 
         channel = img.shape[2]
         img = img + color_bias.reshape((1, 1, channel))
         return img
 
-    def add_banding_noise(self, img, scale): # 添加banding噪声，即论文中row noise
+    def add_banding_noise(self, img, scale):
         channel = img.shape[2]
         img = img + np.random.randn(img.shape[0], 1, channel).astype(np.float32) * scale
         return img
 
-def adjust_random_brightness(image, s_range=(0.1, 0.3)): # 在s_range范围内设置随机亮度
+def adjust_random_brightness(image, s_range=(0.1, 0.3)): 
     assert s_range[0] < s_range[1]
     ratio = np.random.rand() * (s_range[1] - s_range[0]) + s_range[0]
     return image * ratio
@@ -127,7 +126,7 @@ def add_gaussian_noise(image, mean=0, std=0.25):
     noise = np.random.normal(mean, std, image.shape)
     return image + noise
 
-def random_noise_levels(): # 初始化rand and shot noise模型参数随机
+def random_noise_levels(): 
   """Generates random noise levels from a log-log linear distribution."""
   log_min_shot_noise = np.log(0.0001)
   log_max_shot_noise = np.log(0.012)
@@ -139,7 +138,7 @@ def random_noise_levels(): # 初始化rand and shot noise模型参数随机
   read_noise = np.exp(log_read_noise)
   return shot_noise, read_noise
 
-def add_read_and_shot_noise(image, shot_noise=0.01, read_noise=0.005): # 添加read and shot noise
+def add_read_and_shot_noise(image, shot_noise=0.01, read_noise=0.005): 
   """Adds random shot (proportional to image) and read (independent) noise."""
   variance = image * shot_noise + read_noise
   noise = np.random.normal(0, np.sqrt(variance), size=(variance.shape)) 

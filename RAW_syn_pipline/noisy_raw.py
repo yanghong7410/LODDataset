@@ -45,22 +45,22 @@ def pack_raw_bayer(raw):
     
     return out
 
-def add_noise(image, noise_type='physics-based'): # 可选噪声类型：None, 'gaussian', 'gaussian-poisson', 'physics-based')
+def add_noise(image, noise_type='physics-based'): 
     if noise_type is None:
         return image
     if noise_type == 'gaussian':
-        noisemodel = NoiseModel(model='g', camera='CanonEOS5D4') # 初始化noisemodel，噪声类型为'g'，标定相机为CanonEOS5D4
+        noisemodel = NoiseModel(model='g', camera='CanonEOS5D4') 
     elif noise_type == 'gaussian-poisson':
-        noisemodel = NoiseModel(model='pg', camera='CanonEOS5D4') # 初始化noisemodel，噪声类型为'pg'，标定相机为CanonEOS5D4
+        noisemodel = NoiseModel(model='pg', camera='CanonEOS5D4') 
     elif noise_type == 'physics-based':
-        noisemodel = NoiseModel(model='PGRU', camera='CanonEOS5D4') # 初始化noisemodel，噪声类型为'PGBRU'，标定相机为CanonEOS5D4
-    noisy_image = noisemodel(image) #添加噪声
-    noisy_image = np.clip(noisy_image, 0, 1) # 取值限定0~1
+        noisemodel = NoiseModel(model='PGRU', camera='CanonEOS5D4') 
+    noisy_image = noisemodel(image) 
+    noisy_image = np.clip(noisy_image, 0, 1) 
     return noisy_image
 
 normal_input_folder = r'H:\object_detection_data\noisy_test\Normal_raw'
 
-# normal和noisy RGB保存路径
+
 normal_output_folder = r'H:\object_detection_data\noisy_test\physics-based_normal'
 noisy_output_folder = r'H:\object_detection_data\noisy_test\physics-based_noisy'
 
@@ -71,18 +71,18 @@ if not osp.exists(noisy_output_folder):
 
 for filename in sorted(os.listdir(normal_input_folder)):
     if filename[-4:] == '.CR2':
-        normal_raw = rawpy.imread(osp.join(normal_input_folder, filename)) # 读取normal RAW
-        normal_img4c = pack_raw_bayer(normal_raw) # RAW文件解码成四通道
+        normal_raw = rawpy.imread(osp.join(normal_input_folder, filename)) 
+        normal_img4c = pack_raw_bayer(normal_raw) 
 
-        noisy_img4c = add_noise(normal_img4c, noise_type='physics-based') # 可选噪声类型：None, 'gaussian', 'gaussian-poisson', 'physics-based')
+        noisy_img4c = add_noise(normal_img4c, noise_type='physics-based') 
 
         normal_img = raw2rgb(normal_img4c, normal_raw).transpose((1, 2, 0))
         normal_img = (normal_img * 255).round().astype(np.uint8)
-        # normal_img = postprocess_bayer(osp.join(normal_input_folder, filename), normal_img4c) # 四通道bayer转三通道
+        # normal_img = postprocess_bayer(osp.join(normal_input_folder, filename), normal_img4c) 
         
-        normal_img = cv2.resize(normal_img, (6720, 4480)) # 将图像resize成原图尺寸, 防止内部计算里面牵扯到的一些不能整除的问题而产生的size的微小变化
-        normal_img = Image.fromarray(normal_img) # 图像转成Image格式
-        normal_img.save(osp.join(normal_output_folder, filename[:-4]+'.png')) # 保存normal图像，存储为png为无损存储，jpg格式会进行压缩
+        normal_img = cv2.resize(normal_img, (6720, 4480))
+        normal_img = Image.fromarray(normal_img) 
+        normal_img.save(osp.join(normal_output_folder, filename[:-4]+'.png')) 
                 
         noisy_img = raw2rgb(noisy_img4c, normal_raw).transpose((1, 2, 0))
         noisy_img = (noisy_img * 255).round().astype(np.uint8)

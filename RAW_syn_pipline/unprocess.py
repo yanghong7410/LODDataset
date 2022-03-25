@@ -2,7 +2,7 @@
 """
 Created on Wed Jan 20 23:32:03 2021
 
-@author: chxy
+@author: hy
 """
 
 import numpy as np
@@ -10,7 +10,7 @@ import scipy.stats as stats
 from os.path import join
 import random
 
-def random_ccm(): # 创建随机颜色校正矩阵作为Device RGB和sRGB之间的转换
+def random_ccm(): 
     """Generates random RGB -> Camera color correction matrices."""
     # Takes a random convex combination of XYZ -> Camera CCMs.
     xyz2cams = [[[1.0234, -0.2969, -0.2266],
@@ -48,7 +48,7 @@ def get_calibrated_cam2rgb():
                                [-0.00770995, -0.59257895,  1.60028890]], dtype=np.float32)
     return cam2rgb_matrix
 
-def random_gains():# 创建随机白平衡参数
+def random_gains():
     """Generates random gains for brightening and white balance."""
     # RGB gain represents brightening.
     rgb_gain = 1.0 / np.random.normal(0.8, 0.1) 
@@ -58,24 +58,24 @@ def random_gains():# 创建随机白平衡参数
     blue_gain = np.random.uniform(1.5, 1.9)
     return rgb_gain, red_gain, blue_gain
 
-def inverse_smoothstep(image): # 逆色调映射
+def inverse_smoothstep(image): 
     """Approximately inverts a global tone mapping curve."""
     image = np.clip(image, 0.0, 1.0)
-    return 0.5 - np.sin(np.arcsin(1.0 - 2.0 * image) / 3.0) # 全局逆色调映射仿真函数
+    return 0.5 - np.sin(np.arcsin(1.0 - 2.0 * image) / 3.0) 
 
-def gamma_expansion(image): # gamma扩展，将non-linear值转换为linear
+def gamma_expansion(image): 
     """Converts from gamma to linear space."""
     # Clamps to prevent numerical instability of gradients near zero.
     return np.maximum(image, 1e-8) ** 2.2
 
-def apply_ccm(image, ccm): # 应用颜色校正矩阵
+def apply_ccm(image, ccm): 
     """Applies a color correction matrix."""
     shape = image.shape
     image = np.reshape(image, [-1, 3])
     image = np.tensordot(image, ccm, [[-1], [-1]])
     return np.reshape(image, shape)
 
-def safe_invert_gains(image, rgb_gain, red_gain, blue_gain): # 逆白平衡同时处理过饱和像素
+def safe_invert_gains(image, rgb_gain, red_gain, blue_gain): 
     """Inverts gains while safely handling saturated pixels."""
     gains = np.stack((1.0 / red_gain, 1.0, 1.0 / blue_gain)) / rgb_gain
     gains = gains.squeeze()
@@ -87,7 +87,7 @@ def safe_invert_gains(image, rgb_gain, red_gain, blue_gain): # 逆白平衡同�
     safe_gains = np.maximum(mask + (1.0 - mask) * gains, gains)
     return image * safe_gains
 
-def mosaic(image): # 将三通道RGB转换成四通道Raw,此处为RGGB bayer
+def mosaic(image): 
     """Extracts RGGB Bayer planes from an RGB image."""
     shape = image.shape
     red = image[0::2, 0::2, 0]
@@ -102,7 +102,6 @@ def mosaic(image): # 将三通道RGB转换成四通道Raw,此处为RGGB bayer
 def unprocess(image):
     """Unprocesses an image from sRGB to realistic raw data."""
 
-    # 为unprocessing过程创建必须的随机矩阵和随机数
     # Randomly creates image metadata.
     # rgb2cam = random_ccm()
     # cam2rgb = np.linalg.inv(rgb2cam)
@@ -111,13 +110,13 @@ def unprocess(image):
     rgb_gain, red_gain, blue_gain = random_gains()
 
     # Approximately inverts global tone mapping.
-    image = inverse_smoothstep(image) # 逆色调映射
+    image = inverse_smoothstep(image) 
     # Inverts gamma compression.
-    image = gamma_expansion(image) # 线性化
+    image = gamma_expansion(image) 
     # Inverts color correction.
-    image = apply_ccm(image, rgb2cam) # 逆颜色校正
+    image = apply_ccm(image, rgb2cam) 
     # Approximately inverts white balance and brightening.
-    image = safe_invert_gains(image, rgb_gain, red_gain, blue_gain) # 逆白平衡
+    image = safe_invert_gains(image, rgb_gain, red_gain, blue_gain) 
     # Clips saturated pixels.
     image = np.clip(image, 0.0, 1.0)
     # Applies a Bayer mosaic.
