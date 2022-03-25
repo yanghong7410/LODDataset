@@ -16,7 +16,7 @@ import numpy as np
 from PIL import Image
 import cv2
 
-def extract_exposure(raw_path): # 使用exifread库读取RAW文件元数据并提取曝光时间
+def extract_exposure(raw_path): 
     raw_file = open(raw_path, 'rb')
     exif_file = exifread.process_file(raw_file, details=False, strict=True)
 
@@ -93,11 +93,11 @@ def postprocess_bayer(rawpath, img4c):
     return out
 
 
-# 修改输入文件夹路径，且命名数字符合dark = normal + 1 (eg: normal: 1.CR2, dark: 2.CR2)
+
 normal_input_folder = r'C:\Users\LANCE_hy\Desktop\normal'
 dark_input_folder = r'C:\Users\LANCE_hy\Desktop\dark'
 
-# normal和dark RGB保存路径
+
 normal_output_folder = r'C:\Users\LANCE_hy\Desktop\1'
 dark_output_folder = r'C:\Users\LANCE_hy\Desktop\2'
 
@@ -107,37 +107,37 @@ if not osp.exists(dark_output_folder):
     os.mkdir(dark_output_folder)
 
 for filename in tqdm(sorted(os.listdir(normal_input_folder))):
-    if filename[-3:] == 'CR2': # 判断文件是否是RAW格式
-        # prefix = filename[:4] # 前缀，eg：7U6A
-        # number = filename[4:-4] # 中间数字：eg：2714
-        # suffix = filename[-4:] # 后置，eg：.CR2
+    if filename[-3:] == 'CR2': 
+        # prefix = filename[:4] 
+        # number = filename[4:-4] 
+        # suffix = filename[-4:] 
         # print(prefix, number, suffix)
-        # dark_name = prefix + str(int(number) + 1) + suffix # 对应dark图片名称
+        # dark_name = prefix + str(int(number) + 1) + suffix 
         dark_name = str(int(filename[:-4]) + 1) + '.CR2'
         # print(dark_name)
-        if osp.exists(osp.join(dark_input_folder, dark_name)): # 若存在对应dark图片
-            normal_raw = rawpy.imread(osp.join(normal_input_folder, filename)) # 读取normal RAW
-            normal_img4c = pack_raw_bayer(normal_raw) # RAW文件解码成四通道
-            normal_img = postprocess_bayer(osp.join(normal_input_folder, filename), normal_img4c) # 四通道bayer转三通道
-            normal_img = cv2.resize(normal_img, (6720, 4480)) # 将图像resize成原图尺寸, 防止内部计算里面牵扯到的一些不能整除的问题而产生的size的微小变化
+        if osp.exists(osp.join(dark_input_folder, dark_name)): 
+            normal_raw = rawpy.imread(osp.join(normal_input_folder, filename)) 
+            normal_img4c = pack_raw_bayer(normal_raw) 
+            normal_img = postprocess_bayer(osp.join(normal_input_folder, filename), normal_img4c)
+            normal_img = cv2.resize(normal_img, (6720, 4480)) 
             normal_img=cv2.cvtColor(normal_img,cv2.COLOR_RGB2BGR)
             print(osp.join(normal_output_folder, filename[:-4]+'.png'))
             # cv2.imwrite(osp.join(normal_output_folder, filename[:-4]+'.png'),normal_img)
             cv2.imencode('.png', normal_img)[1].tofile(osp.join(normal_output_folder, filename[:-4]+'.png'))
 
-            # normal_img = Image.fromarray(normal_img) # 图像转成Image格式
-            # normal_img.save(osp.join(normal_output_folder, filename[:-4]+'.png')) # 保存normal图像
+            # normal_img = Image.fromarray(normal_img) 
+            # normal_img.save(osp.join(normal_output_folder, filename[:-4]+'.png')) 
 
             
-            normal_exposure = extract_exposure(osp.join(normal_input_folder, filename)) # normal图片曝光时间
-            dark_exposure = extract_exposure(osp.join(dark_input_folder, dark_name)) # dark图片曝光时间
+            normal_exposure = extract_exposure(osp.join(normal_input_folder, filename)) 
+            dark_exposure = extract_exposure(osp.join(dark_input_folder, dark_name)) 
 
-            dark_raw = rawpy.imread(osp.join(dark_input_folder, dark_name)) # 读取dark RAW
-            dark_img4c = pack_raw_bayer(dark_raw) / dark_exposure * normal_exposure # RAW文件解码成四通道并按曝光时间调整亮度
-            dark_img = postprocess_bayer(osp.join(dark_input_folder, dark_name), dark_img4c) # 四通道bayer转三通道
-            dark_img = cv2.resize(dark_img, (6720, 4480)) # 将图像resize成原图尺寸, 防止内部计算里面牵扯到的一些不能整除的问题而产生的size的微小变化
+            dark_raw = rawpy.imread(osp.join(dark_input_folder, dark_name)) 
+            dark_img4c = pack_raw_bayer(dark_raw) / dark_exposure * normal_exposure 
+            dark_img = postprocess_bayer(osp.join(dark_input_folder, dark_name), dark_img4c) 
+            dark_img = cv2.resize(dark_img, (6720, 4480)) 
             dark_img = cv2.cvtColor(dark_img, cv2.COLOR_RGB2BGR)
             # cv2.imwrite(osp.join(dark_output_folder, dark_name[:-4]+'.png'),dark_img)
             cv2.imencode('.png', dark_img)[1].tofile(osp.join(dark_output_folder, dark_name[:-4]+'.png'))
-            # dark_img = Image.fromarray(dark_img) # 图像转成Image格式
-            # dark_img.save(osp.join(dark_output_folder, dark_name[:-4]+'.png')) # 保存dark图像
+            # dark_img = Image.fromarray(dark_img) 
+            # dark_img.save(osp.join(dark_output_folder, dark_name[:-4]+'.png')) 
